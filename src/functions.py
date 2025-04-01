@@ -8,23 +8,23 @@ from dotenv import load_dotenv
 
 # Connect to MongoDB
 load_dotenv()
-MONGO_URI = os.getenv("MONGO_URI")
+# MONGO_URI = os.getenv("MONGO_URI")
+MONGO_URI='mongodb+srv://jbalcombe:80ie3zeQHTY7D52n@quant-db-3011.ejicw.mongodb.net/?retryWrites=true&w=majority&appName=Quant-DB-3011'
 
 def generate_api_key(user_email, role):
     # creating an API key for user.
     api_key = secrets.token_urlsafe(16)
     # expiry is 3 months from the time they develop the API
-    exp = int(datetime.now(timezone.utc) + relativedelta(months=3).timestamp())
-
+    expiry_date = datetime.now(timezone.utc) + relativedelta(months=3)
     auth_object = {
         "email": user_email,
         "key": api_key,
         "role": role,
         "allowed": ["retrieval", "analytical"],
-        "exp": exp
+        "exp": expiry_date.isoformat()
     }
     if save_api_key(auth_object):
-        return api_key
+        return auth_object
     return None
 
 
@@ -33,7 +33,7 @@ def save_api_key(auth_object):
         client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
         db = client['auth_db']
         collection = db['auth_objects']
-        collection.insert_many(auth_object)
+        collection.insert_one(auth_object)
         return True
     except Exception as e:
         print(f"Error in saving the API key {e}")
