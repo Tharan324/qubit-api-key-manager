@@ -8,8 +8,7 @@ from dotenv import load_dotenv
 
 # Connect to MongoDB
 load_dotenv()
-# MONGO_URI = os.getenv("MONGO_URI")
-MONGO_URI='mongodb+srv://jbalcombe:80ie3zeQHTY7D52n@quant-db-3011.ejicw.mongodb.net/?retryWrites=true&w=majority&appName=Quant-DB-3011'
+MONGO_URI = os.getenv("MONGO_URI")
 
 def generate_api_key(user_email, role):
     # creating an API key for user.
