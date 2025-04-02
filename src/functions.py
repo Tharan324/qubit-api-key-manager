@@ -20,7 +20,7 @@ def generate_api_key(user_email, role):
     if role not in ["user", "admin"]:
         return False
     
-    if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"):
+    if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", user_email):
         return False
     
     auth_object = {
@@ -60,4 +60,4 @@ def validate_api_key(api_key):
     if datetime.now(timezone.utc) > datetime.fromisoformat(key_data["exp"]):
         return {"valid": False, "message": "API key expired"}
 
-    return {"valid": True, "email": key_data["email"], "allowed_apis": key_data["allowed"]}
+    return {"valid": True, "email": key_data["email"], "role": key_data["role"], "allowed": key_data["allowed"]}
