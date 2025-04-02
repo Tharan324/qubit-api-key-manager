@@ -1,6 +1,7 @@
 # Ignore virtual environment and environment files
 venv/
 .env
+tests/.coverage
 
 # Ignore python cache
 __pycache__/
