@@ -14,11 +14,15 @@ def generate():
     if not email:
         return jsonify({"error": "Email is required!"}), 400
     response = generate_api_key(email, 'user')
-    if response is not None:
-        return jsonify({"message": "Successfully created key",
-                        "apiKey": response["key"],
-                        "expiryTill": response["exp"]}), 200
-    return jsonify({"message": "Error in creating API key. Please try again"}), 500
+    if response is None:
+        return jsonify({"message": "Error in creating API key. Please try again"}), 500
+    elif response is False:
+        return jsonify({"message": "Incorrect email or role"}), 400
+
+    return jsonify({"message": "Successfully created key",
+                    "apiKey": response["key"],
+                    "expiryTill": response["exp"]}), 200
+    
 
 @app.route('/validate', methods=['POST'])
 def validate():
