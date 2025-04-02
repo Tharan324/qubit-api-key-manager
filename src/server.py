@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from functions import generate_api_key, validate_api_key
 
 app = Flask(__name__)
 
@@ -8,23 +9,30 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    # Placeholder for the generation logic
-    data = request.json
+    data = request.get_json()
     email = data.get('email')
     if not email:
         return jsonify({"error": "Email is required!"}), 400
-    # call generation function here
-    return jsonify({"message": "Generation started!"})
+    response = generate_api_key(email, 'user')
+    if response is None:
+        return jsonify({"message": "Error in creating API key. Please try again"}), 500
+    elif response is False:
+        return jsonify({"message": "Incorrect email or role"}), 400
+
+    return jsonify({"message": "Successfully created key",
+                    "apiKey": response["key"],
+                    "expiryTill": response["exp"]}), 200
+    
 
 @app.route('/validate', methods=['POST'])
-def generate():
-    # Placeholder for the generation logic
-    data = request.json
-    API_KEY = data.get('APIKEY')
-    if not API_KEY:
-        return jsonify({"error": "API KEY is required!"}), 400
-    # call validation function here
-    return jsonify({"message": "Generation started!"})
+def validate():
+    data = request.get_json()
+    api_key = data.get('apiKey')
+    if not api_key:
+        return jsonify({"error": "API key is required!"}), 400
+    response = validate_api_key(api_key)
+    status_code = 200 if response["valid"] else 400
+    return jsonify(response), status_code
 
 if __name__ == "__main__":
     app.run(debug=True)
