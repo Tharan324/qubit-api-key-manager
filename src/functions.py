@@ -36,6 +36,7 @@ def generate_api_key(user_email, role):
 
 
 def save_api_key(auth_object):
+    client = None
     try:
         client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
         db = client['auth_db']
@@ -46,7 +47,8 @@ def save_api_key(auth_object):
         print(f"Error in saving the API key {e}")
         return False
     finally:
-        client.close()
+        if client:
+            client.close()
         
 def validate_api_key(api_key):
     client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
