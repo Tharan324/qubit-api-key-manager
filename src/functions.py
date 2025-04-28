@@ -63,3 +63,67 @@ def validate_api_key(api_key):
         return {"valid": False, "message": "API key expired"}
 
     return {"valid": True, "email": key_data["email"], "role": key_data["role"], "allowed": key_data["allowed"]}
+# OAuth session management functions
+def save_user_session(user_data):
+    client = None
+    try:
+        client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
+        db = client['auth_db']
+        collection = db['user_sessions']
+        
+        # Create session token
+        session_token = secrets.token_urlsafe(32)
+        expiry = datetime.now(timezone.utc) + relativedelta(days=1)
+        
+        session_data = {
+            "session_token": session_token,
+            "user_data": user_data,
+            "exp": expiry.isoformat()
+        }
+        
+        collection.insert_one(session_data)
+        return session_token
+    except Exception as e:
+        print(f"Error saving user session: {e}")
+        return None
+    finally:
+        if client:
+            client.close()
+
+def get_user_session(session_token):
+    client = None
+    try:
+        client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
+        db = client['auth_db']
+        collection = db['user_sessions']
+        
+        session = collection.find_one({"session_token": session_token})
+        if not session:
+            return None
+            
+        if datetime.now(timezone.utc) > datetime.fromisoformat(session["exp"]):
+            collection.delete_one({"session_token": session_token})
+            return None
+            
+        return session["user_data"]
+    except Exception as e:
+        print(f"Error getting user session: {e}")
+        return None
+    finally:
+        if client:
+            client.close()
+
+def delete_user_session(session_token):
+    client = None
+    try:
+        client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
+        db = client['auth_db']
+        collection = db['user_sessions']
+        collection.delete_one({"session_token": session_token})
+        return True
+    except Exception as e:
+        print(f"Error deleting user session: {e}")
+        return False
+    finally:
+        if client:
+            client.close()
