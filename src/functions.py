@@ -69,9 +69,28 @@ def save_user_session(user_data):
     try:
         client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
         db = client['auth_db']
-        collection = db['user_sessions']
         
-        # Create session token
+        # Store user in users collection with investments list
+        users_collection = db['users']
+        users_collection.update_one(
+            {"_id": user_data['email']},  # using email as the key
+            {
+                "$set": {
+                    "email": user_data['email'],
+                    "investments": []  # list to store company investments
+                    # Each investment will be an object with:
+                    # {
+                    #    "company_name": str,
+                    #    "company_ticker": str,
+                    #    "num_units": int
+                    # }
+                }
+            },
+            upsert=True  # create if doesn't exist
+        )
+        
+        # Handle session as before
+        sessions_collection = db['user_sessions']
         session_token = secrets.token_urlsafe(32)
         expiry = datetime.now(timezone.utc) + relativedelta(days=1)
         
@@ -81,7 +100,7 @@ def save_user_session(user_data):
             "exp": expiry.isoformat()
         }
         
-        collection.insert_one(session_data)
+        sessions_collection.insert_one(session_data)
         return session_token
     except Exception as e:
         print(f"Error saving user session: {e}")
